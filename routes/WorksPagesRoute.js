@@ -89,21 +89,28 @@ router.put('/:id', upload.fields([
       existingImagesMetadata = '[]'  // ← Added
     } = req.body;
 
+    //console.log(req.body)
+    //console.log("existingImagesMetadata:",existingImagesMetadata)
     existing.heading = heading || existing.heading;
     existing.description = description;
     existing.description2 = description2;
 
     const retained = JSON.parse(existingImages);
+    //console.log(req.body)
     const existingMetadata = Array.isArray(existingImagesMetadata)
       ? existingImagesMetadata.map(meta => typeof meta === 'string' ? JSON.parse(meta) : meta)
-      : Object.values(req.body)
-          .filter((_, key) => key.startsWith('existingImagesMetadata'))
-          .reduce((acc, _, i) => {
-            acc.push({
-              url: req.body[`existingImagesMetadata[${i}][url]`],
-              title: req.body[`existingImagesMetadata[${i}][title]`] || '',
-              description: req.body[`existingImagesMetadata[${i}][description]`] || ''
-            });
+      : Object.entries(req.body)
+          .filter(([key]) => key.includes('existingImagesMetadata'))
+          .reduce((acc,[key,value] ) => {
+            console.log(key)
+            console.log("doing stuff here?")
+            const match = key.match(/existingImagesMetadata\[(\d+)\]\[([^\]]+)\]/);
+            if (match) {
+              const index = parseInt(match[1]);
+              const field = match[2];
+              acc[index] = acc[index] || { title: '', description: '', url: '' };
+              acc[index][field] = value;
+            }
             return acc;
           }, []);
 
@@ -124,22 +131,28 @@ router.put('/:id', upload.fields([
         imgToUpdate.description = meta.description || '';
       }
     }
-
+    console.log(existingMetadata.length)
     // Upload new additional images
     if (req.files.images) {
+      //console.log(req.body)
       const newImages = await Promise.all(req.files.images.map((file, idx) => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: `works-page/${id}/additional` },
-            (err, result) => err ? reject(err) : resolve({
-              url: result.secure_url,
-              public_id: result.public_id,
-              title: req.body['newImages'][idx]['title'] || '',
-              description: req.body['newImages'][idx]['description'] || ''
-            })
-          );
-          stream.end(file.buffer);
-        });
+        const lengthBuffer = existingMetadata.length;
+        console.log(req.body['newImages'][idx+lengthBuffer])
+
+          return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              { folder: `works-page/${id}/additional` },
+              (err, result) => err ? reject(err) : resolve({
+                url: result.secure_url,
+                public_id: result.public_id,
+                title: req.body?.['newImages']?.[idx+lengthBuffer]?.['title'] || '',
+                description: req.body?.['newImages']?.[idx+lengthBuffer]?.['description'] || ''
+              })
+            );
+            stream.end(file.buffer);
+          });
+        
+        
       }));
       existing.images.push(...newImages);
     }

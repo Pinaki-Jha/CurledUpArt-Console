@@ -5,7 +5,10 @@ const Map = require('../models/MapSection');
 // GET the only map (singleton)
 router.get('/', async (req, res) => {
   try {
+    //console.log("trying to get map")
     const map = await Map.findOne();
+    //console.log("got map.sending...")
+    //console.log(map)
     res.json(map);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch map' });
@@ -21,8 +24,13 @@ router.post('/', async (req, res) => {
     await Map.deleteMany({});
 
     // Create a new one
+    //console.log("creating and saving map")
     const newMap = new Map({ heading, pins });
+    //console.log(newMap)
     await newMap.save();
+
+    //console.log("done")
+
 
     res.json(newMap);
   } catch (err) {
