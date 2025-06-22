@@ -11,7 +11,7 @@ function extractPublicId(url) {
   return match?.[1] || null;
 }
 
-// ✅ GET all sections
+//GET all sections
 router.get('/', async (req, res) => {
   try {
     const sections = await WorksPageSection.find().sort({ createdAt: 1 });
@@ -71,7 +71,7 @@ router.post('/', upload.fields([
   }
 });
 
-// ✅ PUT: Update existing section
+//PUT: Update existing section
 router.put('/:id', upload.fields([
   { name: 'mainImage', maxCount: 1 },
   { name: 'images' }
@@ -80,6 +80,8 @@ router.put('/:id', upload.fields([
     const { id } = req.params;
     const existing = await WorksPageSection.findById(id);
     if (!existing) return res.status(404).json({ error: 'Section not found.' });
+
+    //console.log(req.body);
 
     const {
       heading,
@@ -102,8 +104,6 @@ router.put('/:id', upload.fields([
       : Object.entries(req.body)
           .filter(([key]) => key.includes('existingImagesMetadata'))
           .reduce((acc,[key,value] ) => {
-            console.log(key)
-            console.log("doing stuff here?")
             const match = key.match(/existingImagesMetadata\[(\d+)\]\[([^\]]+)\]/);
             if (match) {
               const index = parseInt(match[1]);
@@ -131,13 +131,18 @@ router.put('/:id', upload.fields([
         imgToUpdate.description = meta.description || '';
       }
     }
-    console.log(existingMetadata.length)
+
+    //console.log(existingMetadata.length)
+    existing.images = existingMetadata
+    .map(meta => existing.images.find(img => img.url === meta.url))
+    .filter(Boolean);
+
     // Upload new additional images
     if (req.files.images) {
       //console.log(req.body)
       const newImages = await Promise.all(req.files.images.map((file, idx) => {
         const lengthBuffer = existingMetadata.length;
-        console.log(req.body['newImages'][idx+lengthBuffer])
+        //console.log(req.body['newImages'][idx+lengthBuffer])
 
           return new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
@@ -184,7 +189,7 @@ router.put('/:id', upload.fields([
 });
 
 
-// ✅ DELETE: Remove a section entirely
+// DELETE: Remove a section entirely
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
