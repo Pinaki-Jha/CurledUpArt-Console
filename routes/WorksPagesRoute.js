@@ -27,10 +27,10 @@ router.post('/', upload.fields([
   { name: 'images' }
 ]), async (req, res) => {
   try {
-    const { heading, description, description2 } = req.body;
+    const { heading, order, description, description2 } = req.body;
     if (!heading) return res.status(400).json({ error: 'Heading is required.' });
 
-    const section = new WorksPageSection({ heading, description, description2 });
+    const section = new WorksPageSection({ heading, order, description, description2 });
     const id = section._id.toString();
 
     // Upload main image
@@ -81,19 +81,23 @@ router.put('/:id', upload.fields([
     const existing = await WorksPageSection.findById(id);
     if (!existing) return res.status(404).json({ error: 'Section not found.' });
 
-    //console.log(req.body);
+    
 
     const {
       heading,
+      order,
       description,
       description2,
       existingImages = '[]',
       existingImagesMetadata = '[]'  // ← Added
     } = req.body;
 
+    //console.log(heading)
+    //console.log(order)
     //console.log(req.body)
     //console.log("existingImagesMetadata:",existingImagesMetadata)
     existing.heading = heading || existing.heading;
+    existing.order = order;
     existing.description = description;
     existing.description2 = description2;
 

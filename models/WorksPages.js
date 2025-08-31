@@ -10,6 +10,7 @@ const ImageSchema = new mongoose.Schema({
 
 const WorksPageSectionSchema = new mongoose.Schema({
   heading: { type: String, required: true },
+  order :{type:Number,default:10000},
   description: { type: String, default: '' },
   description2: { type: String, default: '' },
   mainImage: {

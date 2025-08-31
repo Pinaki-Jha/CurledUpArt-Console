@@ -42,7 +42,7 @@ router.post('/', upload.array('images'), async (req, res) => {
 
     const parsedSections = JSON.parse(sections);
     const images = req.files || [];
-
+    console.log(sections)
     // Step 1: Fetch existing image URLs and public_ids from DB
     const existingDoc = await WorkshopsPage.findOne();
     const oldImageUrls = [];
